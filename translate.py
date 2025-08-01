@@ -10,6 +10,16 @@ from typing import List, Dict
 import faster_whisper
 from deep_translator import GoogleTranslator
 
+# Windows console encoding fix
+if sys.platform == "win32":
+    try:
+        import codecs
+
+        sys.stdout = codecs.getwriter("utf-8")(sys.stdout.detach())
+        sys.stderr = codecs.getwriter("utf-8")(sys.stderr.detach())
+    except:
+        pass  # Fallback if this fails
+
 # Global configuration
 DEFAULT_MODEL_SIZE = "base"
 DEFAULT_DEVICE = "auto"
@@ -69,10 +79,10 @@ class VideoTranslator:
                 audio_path,
             ]
             subprocess.run(cmd, check=True, capture_output=True)
-            self.logger.info("✓ Audio extracted successfully")
+            self.logger.info("Audio extracted successfully")
             return True
         except subprocess.CalledProcessError as e:
-            self.logger.error(f"✗ Failed to extract audio: {e}")
+            self.logger.error(f"Failed to extract audio: {e}")
             return False
 
     def load_whisper_model(self):
@@ -82,7 +92,7 @@ class VideoTranslator:
             self.whisper_model = faster_whisper.WhisperModel(
                 self.model_size, device=self.device, compute_type="float32"
             )
-            self.logger.info(f"✓ Whisper model loaded: {self.model_size}")
+            self.logger.info(f"Whisper model loaded: {self.model_size}")
 
     def transcribe_with_whisper(
         self, audio_path: str, source_language: str = None
@@ -121,11 +131,11 @@ class VideoTranslator:
                     }
                 )
 
-            self.logger.info(f"✓ Transcribed {len(processed_segments)} segments")
+            self.logger.info(f"Transcribed {len(processed_segments)} segments")
             return processed_segments
 
         except Exception as e:
-            self.logger.error(f"✗ Transcription failed: {e}")
+            self.logger.error(f"Transcription failed: {e}")
             raise
 
     def translate_segments(
@@ -172,7 +182,7 @@ class VideoTranslator:
             )
 
         except Exception as e:
-            self.logger.error(f"✗ Translation failed")
+            self.logger.error(f"Translation failed")
             return segments
 
     def _batch_translate_all(
@@ -212,7 +222,7 @@ class VideoTranslator:
                     )
 
                 self.logger.info(
-                    f"✓ Batch translated {len(translated_segments)} segments"
+                    f"Batch translated {len(translated_segments)} segments"
                 )
                 return translated_segments
 
@@ -312,7 +322,7 @@ class VideoTranslator:
                             )
 
         self.logger.info(
-            f"✓ Context-aware batch translated {len(translated_segments)} segments"
+            f"Context-aware batch translated {len(translated_segments)} segments"
         )
         return translated_segments
 
@@ -363,7 +373,7 @@ class VideoTranslator:
                         # Keep original text if translation fails
                         translated_segments.append(segment)
 
-        self.logger.info(f"✓ Translated {len(translated_segments)} segments")
+        self.logger.info(f"Translated {len(translated_segments)} segments")
         return translated_segments
 
     def generate_subtitles(self, segments: List[Dict], output_path: str) -> bool:
@@ -380,11 +390,11 @@ class VideoTranslator:
                     f.write(f"{start_time} --> {end_time}\n")
                     f.write(f"{segment['text']}\n\n")
 
-            self.logger.info(f"✓ SRT subtitles saved to {output_path}")
+            self.logger.info(f"SRT subtitles saved to {output_path}")
             return True
 
         except Exception as e:
-            self.logger.error(f"✗ Failed to generate subtitles: {e}")
+            self.logger.error(f"Failed to generate subtitles: {e}")
             return False
 
     def _format_timestamp(self, seconds: float) -> str:
@@ -406,7 +416,7 @@ class VideoTranslator:
 
         video_path = Path(video_path)
         if not video_path.exists():
-            self.logger.error(f"✗ Video file not found: {video_path}")
+            self.logger.error(f"Video file not found: {video_path}")
             return False
 
         if output_dir is None:
@@ -446,7 +456,7 @@ class VideoTranslator:
                 self.logger.info("Failed to generate subtitles")
                 return False
 
-            self.logger.info("✓ Processing completed successfully!")
+            self.logger.info("Processing completed successfully!")
             self.logger.info(f"Subtitle file: {subtitle_path}")
 
             return True
